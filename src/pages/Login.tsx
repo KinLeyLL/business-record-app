@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 import type { Role } from '../types/auth';
 
 interface LoginProps {
@@ -17,38 +18,37 @@ export default function Login({ onLogin }: LoginProps) {
     e.preventDefault();
     setLoading(true);
 
-    /*
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
 
-      if (authData.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authData.user.id)
-          .single();
-
-        const assignedRole = (profile?.role || 'EMPLOYEE') as Role;
-        onLogin(assignedRole);
-        navigate('/dashboard');
+      const authUser = data.user ?? data.session?.user;
+      if (!authUser) {
+        throw new Error('Unable to authenticate with provided credentials.');
       }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profileError) {
+        console.warn('Failed to load profile role, defaulting to EMPLOYEE.', profileError.message);
+      }
+
+      const assignedRole = (profile?.role || 'EMPLOYEE') as Role;
+      onLogin(assignedRole);
+      navigate('/dashboard');
     } catch (error: any) {
-      alert(error.message);
+      alert(error?.message ?? 'Login failed; check your email and password.');
     } finally {
       setLoading(false);
     }
-    */
-
-    // BYPASS LOGIC
-    console.log("Dev Mode: Logging in as ADMIN");
-    onLogin('ADMIN'); 
-    navigate('/dashboard'); 
-    setLoading(false);
   };
 
   return (
@@ -56,7 +56,7 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-10 shadow-2xl border border-gray-100">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-slate-900">BizManager</h2>
-          <p className="mt-2 text-sm text-slate-500">Dev Mode: Click Sign In to Bypass</p>
+          <p className="mt-2 text-sm text-slate-500">Sign in with your Supabase email and password.</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
