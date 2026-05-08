@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { 
-  ArrowLeft, Trash2, Plus, X, ChevronDown, 
-  Search, Calculator, User as UserIcon, MapPin, 
-  ArrowRight, FileText, Download, Filter
+  Trash2, Plus, X, 
+  Search, Calculator, 
+  ArrowRight, Filter
 } from 'lucide-react';
 
 export default function LumpsumThrikha() {

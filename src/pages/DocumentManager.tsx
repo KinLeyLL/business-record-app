@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import type { Role } from '../types/auth';
 import { 
   ShieldCheck, Plus, User, CreditCard, 
   FileText, X, Search, Trash2, Edit3
 } from 'lucide-react';
 
-export default function DocumentManager({ userRole }: { userRole: string }) {
+export default function DocumentManager({ userRole }: { userRole: Role }) {
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAdd, setShowAdd] = useState<'COMPANY' | 'EMPLOYEE' | null>(null);

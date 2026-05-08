@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import type { Role } from './types/auth';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Projects from './pages/Projects'; 
@@ -12,9 +13,9 @@ import DocumentManager from './pages/DocumentManager';
 import MainLayout from './components/MainLayout';
 
 function App() {
-  const [user, setUser] = useState<{ role: string } | null>(null);
+  const [user, setUser] = useState<{ role: Role } | null>(null);
 
-  const handleLogin = (role: string) => setUser({ role });
+  const handleLogin = (role: Role) => setUser({ role });
   const handleLogout = () => setUser(null);
 
   return (
@@ -68,12 +69,12 @@ function App() {
         <Route 
           path="/projects" 
           element={
-            user ? (
+            (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'OWNER') ? (
               <MainLayout userRole={user.role} onLogout={handleLogout}>
                 <Projects />
               </MainLayout>
             ) : (
-              <Navigate to="/login" />
+              <Navigate to="/dashboard" />
             )
           } 
         />
@@ -83,7 +84,7 @@ function App() {
            element={
              user ? (
                <MainLayout userRole={user.role} onLogout={handleLogout}>
-                 <DSA />
+                 <DSA userRole={user.role} />
                </MainLayout>
              ) : (
                <Navigate to="/login" />
@@ -94,7 +95,7 @@ function App() {
         <Route 
            path="/attendance" 
            element={
-             (user?.role === 'ADMIN' || user?.role === 'MANAGER') ? (
+             (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'OWNER') ? (
                <MainLayout userRole={user.role} onLogout={handleLogout}>
                 <Attendance />
                </MainLayout>
@@ -107,7 +108,7 @@ function App() {
         <Route 
           path="/finance" 
           element={
-            user?.role === 'ADMIN' ? (
+            (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'OWNER') ? (
               <MainLayout userRole={user.role} onLogout={handleLogout}>
                 <Finance /> 
               </MainLayout>
@@ -120,7 +121,7 @@ function App() {
         <Route 
           path="/lumpsum" 
           element={
-            user?.role === 'ADMIN' ? (
+            (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'OWNER') ? (
               <MainLayout userRole={user.role} onLogout={handleLogout}>
                 <Lumpsum /> 
               </MainLayout>

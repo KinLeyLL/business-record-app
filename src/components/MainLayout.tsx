@@ -1,32 +1,27 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import type { Role } from '../types/auth';
 import { 
   LayoutDashboard, 
   Briefcase, 
   FileText, 
-  CircleDollarSign, 
   LogOut,
   User,
   Timer,
   HardHat,
   CheckCircle2,
-  ShieldCheck,
   Bell,
   Search,
-  ChevronDown,
   LineChart,
-  Box,
-  Activity,
   FolderOpen,
   Menu,
-  X,
-  ClipboardList
+  X
 } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
-  userRole: string;
+  userRole: Role;
   onLogout: () => void;
 }
 
@@ -49,7 +44,7 @@ export default function MainLayout({ children, userRole, onLogout }: LayoutProps
       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-1'}
   `;
 
-  const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';
+  const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'OWNER';
 
   return (
     <div className="flex h-screen bg-[#F8F9FB] overflow-hidden">
@@ -77,12 +72,14 @@ export default function MainLayout({ children, userRole, onLogout }: LayoutProps
             </div>
           </Link>
 
-          <Link to="/projects" className={linkStyle('/projects')}>
-            <div className="flex items-center gap-3">
-              <Briefcase size={20} className={isActive('/projects') ? 'text-indigo-600' : 'text-slate-400'} />
-              {isSidebarOpen && <span className="text-[14px]">Projects</span>}
-            </div>
-          </Link>
+          {isAdminOrManager && (
+            <Link to="/projects" className={linkStyle('/projects')}>
+              <div className="flex items-center gap-3">
+                <Briefcase size={20} className={isActive('/projects') ? 'text-indigo-600' : 'text-slate-400'} />
+                {isSidebarOpen && <span className="text-[14px]">Projects</span>}
+              </div>
+            </Link>
+          )}
 
           <Link to="/completed-sites" className={linkStyle('/completed-sites')}>
             <div className="flex items-center gap-3">

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import type { Role } from '../types/auth';
 import { 
   Calendar, 
-  PlusCircle, 
   CheckCircle2,
   Clock,
   Loader2,
@@ -18,8 +18,6 @@ import {
   Trash2,
   Edit3
 } from 'lucide-react';
-
-type Role = 'OWNER' | 'MANAGER' | 'EMPLOYEE' | 'ADMIN';
 
 interface Worker {
   id: string;
@@ -46,13 +44,11 @@ const BHUTAN_DZONGKHAGS = [
   "Trashi Yangtse", "Trongsa", "Tsirang", "Wangdue Phodrang", "Zhemgang"
 ];
 
-export default function DSA() {
-  const [userRole, setUserRole] = useState<Role>('EMPLOYEE');
+export default function DSA({ userRole }: { userRole: Role }) {
   const currentUser = { id: 'MGR-001', name: 'Sangay (Manager)' }; 
 
   const [logs, setLogs] = useState<DSALog[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]); 
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(''); 
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -61,23 +57,27 @@ export default function DSA() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Set 'days' and 'amount' as string types initially so they can be empty ('')
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     initial_location: '',
     destination: '',
-    days: 1,
+    days: '' as string | number,
     vehicle_number: '',
-    amount: 0,
+    amount: '' as string | number,
     selected_worker_id: '', 
     selected_worker_name: '' 
   });
 
   useEffect(() => {
+    setShowAdd(false);
+    setEditingId(null);
+    setSearchTerm('');
+    setCurrentPage(1);
     fetchData();
   }, [userRole]);
 
   async function fetchData() {
-    setLoading(true);
     try {
       const { data: workerData } = await supabase.from('workers').select('id, name');
       let combinedWorkers: Worker[] = workerData || [];
@@ -88,6 +88,7 @@ export default function DSA() {
       setWorkers(combinedWorkers);
 
       let query = supabase.from('dsa').select('*').order('date', { ascending: false });
+      
       if (userRole === 'EMPLOYEE') {
         query = query.eq('employee_id', currentUser.id);
       }
@@ -97,8 +98,6 @@ export default function DSA() {
       setLogs(data || []);
     } catch (err: any) {
       console.error('Error fetching data:', err.message);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -159,6 +158,7 @@ export default function DSA() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     let finalId = currentUser.id;
     let finalName = currentUser.name;
     
@@ -167,13 +167,17 @@ export default function DSA() {
       finalName = formData.selected_worker_name.replace(' (Me)', ''); 
     }
 
+    // Convert days and amount back to numbers during submission
+    const finalDays = Number(formData.days) || 1;
+    const finalAmount = Number(formData.amount) || 0;
+
     const payload = {
       date: formData.date,
       initial_location: formData.initial_location,
       destination: formData.destination,
-      days: formData.days,
+      days: finalDays,
       vehicle_number: formData.vehicle_number || 'Personal Arrangement',
-      amount: formData.amount,
+      amount: finalAmount,
       employee_id: finalId,
       employee_name: finalName,
     };
@@ -187,7 +191,17 @@ export default function DSA() {
         if (error) throw error;
       }
       
-      setFormData({ date: new Date().toISOString().split('T')[0], initial_location: '', destination: '', days: 1, vehicle_number: '', amount: 0, selected_worker_id: '', selected_worker_name: '' });
+      // Reset with empty strings so next entries start clean
+      setFormData({ 
+        date: new Date().toISOString().split('T')[0], 
+        initial_location: '', 
+        destination: '', 
+        days: '', 
+        vehicle_number: '', 
+        amount: '', 
+        selected_worker_id: '', 
+        selected_worker_name: '' 
+      });
       setShowAdd(false);
       setEditingId(null);
       fetchData();
@@ -219,12 +233,6 @@ export default function DSA() {
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mr-2">
-                {(['EMPLOYEE', 'MANAGER', 'OWNER'] as Role[]).map((r) => (
-                  <button key={r} onClick={() => {setUserRole(r); setSearchTerm(''); setCurrentPage(1);}} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${userRole === r ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{r}</button>
-                ))}
-              </div>
-
               {(userRole !== 'OWNER') && (
                 <button 
                   onClick={() => { setShowAdd(!showAdd); if(showAdd) setEditingId(null); }} 
@@ -277,12 +285,26 @@ export default function DSA() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Days</label>
-                  <input type="number" required className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none" value={formData.days} onChange={e => setFormData({...formData, days: parseInt(e.target.value) || 1})} />
+                  <input 
+                    type="number" 
+                    required 
+                    placeholder="e.g. 3"
+                    className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold outline-none" 
+                    value={formData.days} 
+                    onChange={e => setFormData({...formData, days: e.target.value})} 
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Amount (Nu.)</label>
                   <div className="flex gap-2">
-                    <input type="number" required className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-bold text-emerald-600 outline-none" value={formData.amount} onChange={e => setFormData({...formData, amount: parseInt(e.target.value) || 0})} />
+                    <input 
+                      type="number" 
+                      required 
+                      placeholder="Nu."
+                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-bold text-emerald-600 outline-none" 
+                      value={formData.amount} 
+                      onChange={e => setFormData({...formData, amount: e.target.value})} 
+                    />
                     <button type="submit" className="bg-slate-900 text-white p-3 rounded-xl hover:bg-black transition-all active:scale-95 shadow-md">
                       {editingId ? <Check size={20} /> : <ArrowRight size={20} />}
                     </button>
@@ -347,18 +369,33 @@ export default function DSA() {
                   <td className="px-8 py-5 text-right">
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {log.status === 'Pending' && (
-                          <>
-                             <button onClick={() => startEdit(log)} className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"><Edit3 size={16}/></button>
-                             <button onClick={() => handleDelete(log.id)} className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"><Trash2 size={16}/></button>
-                          </>
+                        {userRole !== 'OWNER' && log.status === 'Pending' && (
+                          <button 
+                            onClick={() => startEdit(log)} 
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
+                            title="Edit Record"
+                          >
+                            <Edit3 size={16}/>
+                          </button>
+                        )}
+                        
+                        {(userRole === ('OWNER' as Role) || (log.status === 'Pending' && userRole !== ('OWNER' as Role))) && (
+                          <button 
+                            onClick={() => handleDelete(log.id)} 
+                            className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                            title="Delete Record"
+                          >
+                            <Trash2 size={16}/>
+                          </button>
                         )}
                       </div>
+
                       {userRole === 'MANAGER' && log.status === 'Pending' && (
                         <button onClick={() => handleUpdateStatus(log.id)} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[9px] font-black uppercase tracking-tighter flex items-center gap-1 hover:bg-indigo-700 transition-colors">
                           {updatingId === log.id ? <Loader2 size={12} className="animate-spin"/> : <Check size={12}/>} Approve
                         </button>
                       )}
+
                       {userRole === 'OWNER' && log.status === 'Approved' && (
                         <button onClick={() => handleUpdateStatus(log.id)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-tighter flex items-center gap-1 hover:bg-emerald-700 transition-colors">
                           {updatingId === log.id ? <Loader2 size={12} className="animate-spin"/> : <CreditCard size={12}/>} Mark Paid

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
-  Calendar as CalendarIcon, XCircle, CheckCircle2, Banknote, 
-  UserPlus, Trash2, HandCoins, History, X, Search, 
-  ChevronLeft, ChevronRight, Users, ListFilter
+  Calendar as CalendarIcon, 
+  UserPlus, Trash2, Search, 
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient'; 
 
@@ -203,7 +203,8 @@ export default function Attendance() {
                   <th className="px-8 py-4">Date</th>
                   <th className="px-8 py-4">Worker</th>
                   <th className="px-8 py-4">Status</th>
-                  <th className="px-8 py-4 text-right">Amount (Wage/Adv)</th>
+                  <th className="px-8 py-4">Wage Paid</th>
+                  <th className="px-8 py-4">Advance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -214,9 +215,8 @@ export default function Attendance() {
                     <td className="px-8 py-4">
                       <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase ${item.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>{item.status}</span>
                     </td>
-                    <td className="px-8 py-4 text-right font-mono text-xs font-bold">
-                      Nu. {(Number(item.wage_paid) + Number(item.advance_paid)).toLocaleString()}
-                    </td>
+                    <td className="px-8 py-4 font-mono text-xs font-bold text-slate-700">Nu. {Number(item.wage_paid).toLocaleString()}</td>
+                    <td className="px-8 py-4 font-mono text-xs font-bold text-rose-600">Nu. {Number(item.advance_paid).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

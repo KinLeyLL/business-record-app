@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Loader2 } from 'lucide-react';
+import type { Role } from '../types/auth';
 
 interface LoginProps {
-  onLogin: (role: string) => void;
+  onLogin: (role: Role) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -32,7 +33,7 @@ export default function Login({ onLogin }: LoginProps) {
           .eq('id', authData.user.id)
           .single();
 
-        const assignedRole = profile?.role || 'EMPLOYEE';
+        const assignedRole = (profile?.role || 'EMPLOYEE') as Role;
         onLogin(assignedRole);
         navigate('/dashboard');
       }

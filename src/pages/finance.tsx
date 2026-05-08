@@ -1,45 +1,41 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { 
-  X, Search, User as UserIcon, ArrowRight, 
-  Download, Filter, Receipt, History, Calculator, Scale, Undo2, CheckCircle2
+  X, Search, User as UserIcon, 
+  Filter, Scale, Undo2, CheckCircle2
 } from 'lucide-react';
 
 export default function Finance() {
   const [settlements, setSettlements] = useState<any[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => { fetchSettlementData(); }, []);
 
   const fetchSettlementData = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from('attendance').select(`
-          wage_paid, advance_paid, status, workers ( name )
-      `);
-      if (error) throw error;
-      const workerMap: Record<string, any> = {};
-      data.forEach(item => {
-        const name = item.workers?.name || 'Unknown';
-        if (!workerMap[name]) {
-          workerMap[name] = { 
-            name, 
-            totalEarned: 0, 
-            totalAdvances: 0, 
-            daysPresent: 0,
-            isSettled: false // Added functional state for settlement
-          };
-        }
-        if (item.status === 'present') {
-          workerMap[name].totalEarned += Number(item.wage_paid || 0);
-          workerMap[name].daysPresent += 1;
-        }
-        workerMap[name].totalAdvances += Number(item.advance_paid || 0);
-      });
-      setSettlements(Object.values(workerMap));
-    } finally { setLoading(false); }
+    const { data, error } = await supabase.from('attendance').select(`
+        wage_paid, advance_paid, status, workers ( name )
+    `);
+    if (error) throw error;
+    const workerMap: Record<string, any> = {};
+    data.forEach(item => {
+      const name = item.workers?.[0]?.name || 'Unknown';
+      if (!workerMap[name]) {
+        workerMap[name] = { 
+          name, 
+          totalEarned: 0, 
+          totalAdvances: 0, 
+          daysPresent: 0,
+          isSettled: false // Added functional state for settlement
+        };
+      }
+      if (item.status === 'present') {
+        workerMap[name].totalEarned += Number(item.wage_paid || 0);
+        workerMap[name].daysPresent += 1;
+      }
+      workerMap[name].totalAdvances += Number(item.advance_paid || 0);
+    });
+    setSettlements(Object.values(workerMap));
   };
 
   // Functional logic to toggle settlement
@@ -49,7 +45,7 @@ export default function Finance() {
     ));
     // Update the selected worker reference so the UI updates immediately
     if (selectedWorker && selectedWorker.name === workerName) {
-      setSelectedWorker(prev => ({ ...prev, isSettled: !prev.isSettled }));
+      setSelectedWorker((prev: any) => ({ ...prev, isSettled: !prev.isSettled }));
     }
   };
 

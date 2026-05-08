@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import type { Role } from '../types/auth';
 import { CheckCircle2, Search, Plus, Calendar, User, MessageSquare, Building2, X, Trash2, Edit3 } from 'lucide-react';
 
-export default function CompletedSites({ userRole }: { userRole: string }) {
+export default function CompletedSites({ userRole }: { userRole: Role }) {
   const [sites, setSites] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

@@ -1,35 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import type { Role } from '../types/auth';
 import { 
-  BarChart3, 
-  CheckCircle2, 
-  Clock, 
   TrendingUp, 
-  AlertTriangle,
   Loader2,
   Sparkles,
-  Bell,
-  Info,
-  ChartPie,
   Users,
   DollarSign,
   Briefcase,
-  FileText,
-  AlertCircle,
   CalendarX,
-  Eye,
   CheckSquare,
   ChevronRight
 } from 'lucide-react';
 
 interface DashboardProps {
-  userRole: string;
+  userRole: Role;
   // Added onNavigate prop to handle button clicks
   onNavigate?: (view: string) => void;
 }
 
-export default function Dashboard({ userRole, onNavigate }: DashboardProps) {
-  const isAdmin = userRole === 'ADMIN';
+export default function Dashboard({ userRole: _userRole, onNavigate }: DashboardProps) {
   const [stats, setStats] = useState({
     totalExpenses: 0,
     activeProjects: 0,
